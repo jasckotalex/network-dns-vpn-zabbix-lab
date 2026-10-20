@@ -1,0 +1,22 @@
+# Secrets and local state
+.env
+*.env
+*.key
+*.pem
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+known_hosts
+
+# Database and runtime files
+*.sql.gz
+*.dump
+*.sqlite
+*.log
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

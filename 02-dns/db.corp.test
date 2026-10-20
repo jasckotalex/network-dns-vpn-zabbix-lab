@@ -1,0 +1,13 @@
+$TTL 3600
+
+@       IN      SOA     dns.corp.test. admin.corp.test. (
+                        2026101701 ; Serial
+                        3600       ; Refresh
+                        900        ; Retry
+                        604800     ; Expire
+                        86400      ; Negative Cache TTL
+                        )
+
+        IN      NS      dns.corp.test.
+
+dns     IN      A       10.10.20.10

@@ -1,0 +1,91 @@
+===== R-HQ — основные элементы конфигурации =====
+
+! Router-on-a-stick для VLAN 10 и VLAN 20
+interface GigabitEthernet0/0.10
+ description HQ_USERS
+ encapsulation dot1Q 10
+ ip address 10.10.10.1 255.255.255.0
+ ip nat inside
+
+interface GigabitEthernet0/0.20
+ description DNS_SERVERS
+ encapsulation dot1Q 20
+ ip address 10.10.20.1 255.255.255.0
+ ip nat inside
+
+interface GigabitEthernet0/1
+ description TRANSIT_TO_R-BRANCH
+ ip address 10.254.0.1 255.255.255.252
+ ip nat inside
+
+interface GigabitEthernet0/2
+ description OUTSIDE_TO_EVE_NET
+ ip address dhcp
+ ip nat outside
+
+! Маршрут в сеть филиала
+ip route 10.20.10.0 255.255.255.0 10.254.0.2
+
+! NAT только для выхода во внешнюю сеть
+access-list 1 permit 10.10.10.0 0.0.0.255
+access-list 1 permit 10.10.20.0 0.0.0.255
+access-list 1 permit 10.20.10.0 0.0.0.255
+ip nat inside source list 1 interface GigabitEthernet0/2 overload
+
+===== R-BRANCH — основные элементы конфигурации =====
+
+interface GigabitEthernet0/0
+ description BRANCH_USERS
+ ip address 10.20.10.1 255.255.255.0
+
+interface GigabitEthernet0/1
+ description TRANSIT_TO_R-HQ
+ ip address 10.254.0.2 255.255.255.252
+
+! Маршруты к HQ и DNS-сети
+ip route 10.10.10.0 255.255.255.0 10.254.0.1
+ip route 10.10.20.0 255.255.255.0 10.254.0.1
+
+! Маршрут по умолчанию в сторону R-HQ
+ip route 0.0.0.0 0.0.0.0 10.254.0.1
+
+===== SW-HQ — основные элементы конфигурации =====
+
+vlan 10
+ name USERS
+
+vlan 20
+ name SERVER
+
+interface GigabitEthernet0/0
+ description TRUNK_TO_R-HQ
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20
+
+interface GigabitEthernet0/1
+ description VPCS-HQ
+ switchport mode access
+ switchport access vlan 10
+
+interface GigabitEthernet0/2
+ description ServerDNS
+ switchport mode access
+ switchport access vlan 20
+
+===== VPCS-HQ =====
+
+ip 10.10.10.10/24 10.10.10.1
+ip dns 10.10.20.10
+save
+
+===== VPCS-BRANCH =====
+
+ip 10.20.10.10/24 10.20.10.1
+ip dns 10.10.20.10
+save
+
+===== ServerDNS =====
+
+IP: 10.10.20.10/24
+Gateway: 10.10.20.1
+DNS service: BIND9
